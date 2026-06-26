@@ -28,8 +28,6 @@ def upload_photo(file_path):
             print("Failed to upload the image. Status code:", response.status_code)
             return None
 
-
-
 # ------------------------- Add Waifu ------------------------- #
 
 @app.on_message(filters.command("addwaifu") & filters.user(list(set(config.OWNER_ID + config.SUDO_IDS))))
@@ -44,61 +42,95 @@ async def add_waifus(_, message):
     except:
         return await msg.edit_text("🛑 Timeout! You didn't send a photo in time.")
 
-    if input1.photo:
-        file_name = f"{user_id}_waifu_thumb.jpg"
-        photo_path = await asyncio.create_task(app.download_media(input1.photo.file_id, file_name=file_name))
+    # Check if input1 is valid and contains photo
+    if not input1 or not hasattr(input1, 'photo') or not input1.photo:
+        await msg.edit_text("🛑 Invalid input! Please send a photo.")
+        return
 
-        url = upload_photo(photo_path)
-        await input1.delete()
+    file_name = f"{user_id}_waifu_thumb.jpg"
+    photo_path = await asyncio.create_task(app.download_media(input1.photo.file_id, file_name=file_name))
 
-        if not url:
-            return await msg.edit_text("🛑 Failed to upload the photo. Please try again.")
+    url = upload_photo(photo_path)
+    await input1.delete()
 
-        await msg.edit_text("📝 Now send your waifu's **name**...")
+    if not url:
+        return await msg.edit_text("🛑 Failed to upload the photo. Please try again.")
 
-        try:
-            input2 = await app.listen(user_id=user_id, timeout=30)
-        except:
-            return await msg.edit_text("🛑 Timeout! You didn't send the name in time.")
+    await msg.edit_text("📝 Now send your waifu's **name**...")
 
-        name = input2.text.strip()
-        await input2.delete()
+    try:
+        input2 = await app.listen(user_id=user_id, timeout=30)
+    except:
+        return await msg.edit_text("🛑 Timeout! You didn't send the name in time.")
 
-        await msg.edit_text("🎬 Now send the **anime name** she is from...")
+    # Check if input2 is valid and contains text
+    if not input2 or not hasattr(input2, 'text') or not input2.text or not input2.text.strip():
+        await msg.edit_text("🛑 Invalid name! Please provide a valid name.")
+        await input2.delete() if input2 else None
+        return
 
-        try:
-            input3 = await app.listen(user_id=user_id, timeout=30)
-        except:
-            return await msg.edit_text("🛑 Timeout! You didn't send the anime name in time.")
+    name = input2.text.strip()
+    await input2.delete()
 
-        anime = input3.text.strip()
-        await input3.delete()
+    await msg.edit_text("🎬 Now send the **anime name** she is from...")
 
-        await msg.edit_text("💠 Now send the **waifu rank**.\n\nExamples:\n`Common`, `Rare`, `Epic`, `Legendary`, `Mythical`, `Dark`,`Divine`,`Celestial`")
+    try:
+        input3 = await app.listen(user_id=user_id, timeout=30)
+    except:
+        return await msg.edit_text("🛑 Timeout! You didn't send the anime name in time.")
 
-        try:
-            input4 = await app.listen(user_id=user_id, timeout=30)
-        except:
-            return await msg.edit_text("🛑 Timeout! You didn't send the level in time.")
+    # FIX: Check if input3 is valid and contains text
+    if not input3 or not hasattr(input3, 'text') or not input3.text or not input3.text.strip():
+        await msg.edit_text("🛑 Invalid anime name! Please provide a valid anime name.")
+        await input3.delete() if input3 else None
+        return
 
-        rank = input4.text.strip()
-        await input4.delete()
-        
-        await msg.edit_text("💠 Now send the **waifu price**.\n\nExample Of Price List:\n`Common: 100-400`\n`Rare: 300-800`\n`Epic: 500-1000`\n`Legendary: 600-1200`\n`Mythical: 800-1600`\n`Dark: 1000-2000`\n`Divine: 1200-2400`\n`Celestial: 1400-3000`")
+    anime = input3.text.strip()
+    await input3.delete()
 
-        try:
-            input5 = await app.listen(user_id=user_id, timeout=30)
-        except:
-            return await msg.edit_text("🛑 Timeout! You didn't send the Price in time.")
+    await msg.edit_text("💠 Now send the **waifu rank**.\n\nExamples:\n`Common`, `Rare`, `Epic`, `Legendary`, `Mythical`, `Dark`,`Divine`,`Celestial`")
 
+    try:
+        input4 = await app.listen(user_id=user_id, timeout=30)
+    except:
+        return await msg.edit_text("🛑 Timeout! You didn't send the level in time.")
+
+    # Check if input4 is valid and contains text
+    if not input4 or not hasattr(input4, 'text') or not input4.text or not input4.text.strip():
+        await msg.edit_text("🛑 Invalid rank! Please provide a valid rank.")
+        await input4.delete() if input4 else None
+        return
+
+    rank = input4.text.strip()
+    await input4.delete()
+    
+    await msg.edit_text("💠 Now send the **waifu price**.\n\nExample Of Price List:\n`Common: 100-400`\n`Rare: 300-800`\n`Epic: 500-1000`\n`Legendary: 600-1200`\n`Mythical: 800-1600`\n`Dark: 1000-2000`\n`Divine: 1200-2400`\n`Celestial: 1400-3000`")
+
+    try:
+        input5 = await app.listen(user_id=user_id, timeout=30)
+    except:
+        return await msg.edit_text("🛑 Timeout! You didn't send the Price in time.")
+
+    # Check if input5 is valid and contains numeric text
+    if not input5 or not hasattr(input5, 'text') or not input5.text or not input5.text.strip():
+        await msg.edit_text("🛑 Invalid price! Please provide a valid numeric price.")
+        await input5.delete() if input5 else None
+        return
+
+    try:
         price = int(input5.text.strip())
-        await input4.delete()
+    except ValueError:
+        await msg.edit_text("🛑 Invalid price! Please provide a valid numeric value.")
+        await input5.delete()
+        return
+    
+    await input5.delete()
 
-        waifu_data = await waifusdb.addWaifu(name, url, anime, rank, price)
-        await msg.delete()
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🗑 Delete", callback_data=f"delete_waifu:{waifu_data['_id']}")]])
-        await message.reply_photo(photo=url,
-            caption=f"""
+    waifu_data = await waifusdb.addWaifu(name, url, anime, rank, price)
+    await msg.delete()
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🗑 Delete", callback_data=f"delete_waifu:{waifu_data['_id']}")]])
+    await message.reply_photo(photo=url,
+        caption=f"""
 ✅ Waifu added successfully!
 
 📸 Photo: [Hosted Link]({url})
@@ -109,11 +141,6 @@ async def add_waifus(_, message):
 💠 Rank: {rank}
 💰 Price: {price}
         """, reply_markup=keyboard)
-
-    else:
-        await msg.edit_text("🛑 That wasn't a valid photo. Please start again and send a proper waifu image.")
-
-
 
 # ------------------------- Delete Waifu ------------------------- #
 
@@ -169,11 +196,9 @@ async def delete_waifu_callback(_, query):
     else:
         await query.answer("🛑 Failed to delete waifu.", show_alert=True)
 
-
 # ------------------------- Waifu Watcher ------------------------- #
 
 spawn = {}
-
 
 @app.on_message(filters.group & filters.text, group=11)
 async def watcher(client, message):
@@ -202,7 +227,6 @@ async def watcher(client, message):
 
     spawn[chat_id]["count"] += 1
 
-   
     if spawn[chat_id]["count"] >= spawn_count:
         spawn[chat_id]["count"] = 0  
         waifus = await waifusdb.getAllWaifus()
@@ -247,7 +271,6 @@ async def watcher(client, message):
 
         spawn[chat_id]["task"] = asyncio.create_task(timeout())
 
-
 # ------------------------- Waifu Grab ------------------------- #
 
 @app.on_message(filters.command("grab") & filters.group)
@@ -283,7 +306,3 @@ async def grab_waifu(_, message):
     if spawn[chat_id]["task"]:
         spawn[chat_id]["task"].cancel()
         spawn[chat_id]["task"] = None
-
-    
-
-
